@@ -1,82 +1,73 @@
-# Demonic Scans Game Enhancement Extension
+# Veyra Enhanced Extension
 
---- 
-[Installation](#Installation)
-[Information](#📝-Quick-Summary)
+Advanced browser extension for Veyra game with intelligent automation, enhanced UI, and comprehensive game management features.
 
----
+[Installation](#installation) | [Features](#features) | [Automation](#automation)
 
-## 📝 Quick Summary
+## Features
 
-**Demon Game Enhancement Extension** - Advanced browser addon featuring multi-criteria monster filtering, sidebar quick access for inventory/merchant items, real-time stats management, instant battle actions, customizable themes, and cross-page automation.
+### 📱 Enhanced Interface
+- Real-time stats display with quick +1/+5 allocation buttons
+- Collapsible sidebar with 12 color themes
+- Cross-page item usage without navigation
+- Alternative inventory views (grid/table)
 
-### 📱 Enhanced Sidebar Navigation
-- **Real-time Stats Display**: Live attack, defense, stamina, and stat points
-- **Quick Stat Allocation**: +1/+5 buttons for instant stat upgrades
-- **Expandable Sections**: Collapsible pets, blacksmith, merchant, inventory sections
-- **Customizable Colors**: 12 sidebar colors and 12 background themes
+### 🎯 Smart Filtering
+- Multi-criteria monster filtering (name, wave, HP, player count)
+- Multiple monster type selection
+- HP-based sorting for optimal targeting
 
-### 🎯 Advanced Monster Filtering System
-- **Multi-Criteria Filtering**: Name, wave, HP, player count, monster type
-- **Multiple Monster Type Selection**: Checkbox system for 2-3 types simultaneously
-- **Smart Filtering**: Low/Medium/High/Full HP, Empty/Few/Many/Full player counts
-- **Visual Enhancements**: Hide images, battle limit alarms
+### ⚡ Quick Access
+- Pin consumables/equipment for instant use
+- Merchant quick access for instant purchasing
+- Configurable pin limits (1-10 items)
+- Auto-refresh inventory quantities
 
-### ⚡ Universal Quick Access System
-- **Inventory Quick Access**: Pin up to 2 consumables/equipment for instant use
-- **Merchant Quick Access**: Pin up to 2 items for instant purchasing
-- **Cross-Page Functionality**: Use items from any page without navigation
+### 🎮 Battle Enhancements
+- Instant battle actions and loot collection
+- Expandable battle categories
+- Damage calculations and total damage display
 
-### 🎮 Battle & Combat Enhancements
-- **Instant Battle Actions**: Join battles without page navigation
-- **Collapsible Sections**: Expandable battle categories with memory
-- **Instant Loot Collection**: One-click loot gathering with modal display
-- **HP-Based Sorting**: Monsters sorted by current HP for optimal targeting
+## Automation
 
-### 🎨 UI/UX Improvements
-- **Alternative Inventory View**: Toggle between grid and table layouts
+### 🤖 PvP Automation
+- Fully automated PvP battles with win/loss prediction
+- Auto-surrender losing battles to save times
+- AutoSlash combat with manual override
+- Real-time battle statistics and HUD
 
-### 📊 Stats & Progress Tracking
-- **Real-time Stats Updates**: Live stat monitoring across all pages
-- **Damage Calculations**: Attack damage vs different defense values
-- **Total Damage Display**: Combined pet and item damage calculations
+### 🌽 Energy Farming
+- Automated manga reading for energy farming
+- Configurable energy caps and thresholds
+- Cross-site navigation between game and manga
+- Smart energy management with farming limits
+- Autologin if session got kicked when farming
 
-### ⚙️ Settings & Customization
-- **Comprehensive Settings Panel**: Color themes, section preferences
-- **Data Management**: Clear all data, reset to defaults
-- **Persistent Preferences**: All settings saved across sessions
 
-### 🔄 Cross-Page Functionality
-- **Universal Item Usage**: Use consumables from any page
-- **Merchant Integration**: Buy items without visiting merchant page
-- **Stats Management**: Allocate stats from sidebar on any page
-- **Real-time Updates**: Live data synchronization across pages
 
-## 🔧 Advanced Features
+## Installation
 
-- **Multi-Wave Monster Filtering**: Filter by specific waves (Wave 1, Wave 2, All)
-- **Universal Item Actions**: Use consumables, view equipment from any page
-- **Smart Battle Management**: Automatic battle joining and loot collection
-- **Professional Theme System**: 12 sidebar colors × 12 background themes
+### Chrome/Edge/Brave
+1. Download and extract the zip file
+2. Go to Extensions (chrome://extensions/)
+3. Enable Developer mode
+4. Click "Load Unpacked" and select the folder
 
---- 
-# Installation
+### Firefox
+1. Download and extract the zip file
+2. Delete main manifest.json, copy from `/firefox` folder
+3. Go to about:debugging#/runtime/this-firefox
+4. Click "Load Temporary Add-on" and select manifest.json
 
-## Chromium Based Browsers
+## Quick Start
 
-- Download the zip file
-- Extract file 
-- Go to Extensions
-- [Turn on developer mode](https://www.youtube.com/watch?v=drNTeGl41ns)
-- Press Load Unpacked and choose the extracted file
+1. Visit [demonicscans.org](https://demonicscans.org) and log in
+2. Navigate to any game page to see the enhanced sidebar
+3. Configure settings via the Settings panel (⚙️)
+4. Explore automation features in the "Automation Script" section
 
-## FireFox 
+## ⚠️ Disclaimer
 
-- Download the file
-- Unzip the file
-- Delete the manifest.json file 
-- Go to /firefox subfolder and cut and copy to main folder
-- Go to [temporary extensions page](about:debugging#/runtime/this-firefox) 
-- Pres Load Extension and select the manifest.json
+**USE AT YOUR OWN RISK** - This extension includes automation features. Use responsibly and in accordance with site terms. You assume all responsibility for any consequences.
 
 
