@@ -196,13 +196,72 @@
     if (sidebarPointsAlloc) sidebarPointsAlloc.textContent = userStats.STAT_POINTS;
   }
 
+  async function savePlayerState(params) {
+    const attack = document.getElementById('v-attack')?.textContent || params?.attack;
+    const defense = document.getElementById('v-defense')?.textContent || params?.defense;
+    const stamina = document.getElementById('v-stamina')?.textContent || params?.stamina;
+    const points = document.getElementById('v-points')?.textContent || params?.points;
+    const levelEl = document.querySelector('.gtb-level');
+    const level = levelEl ? parseInt(levelEl.textContent.replace(/\D/g, '')) : 0;
+
+    if (attack && defense && stamina && points) {
+      const playerState = {
+        attack: parseInt(attack.replace(/,/g, '')),
+        defense: parseInt(defense.replace(/,/g, '')),
+        stamina: parseInt(stamina.replace(/,/g, '')),
+        points: parseInt(points.replace(/,/g, '')),
+        level: level,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('playerState', JSON.stringify(playerState));
+    }
+  }
+
+  async function getPlayerState() {
+    try {
+      const saved = localStorage.getItem('playerState');
+      if (!saved) return null;
+
+      const playerState = JSON.parse(saved);
+      const currentLevelEl = document.querySelector('.gtb-level');
+      const currentLevel = currentLevelEl ? parseInt(currentLevelEl.textContent.replace(/\D/g, '')) : playerState.level;
+
+      // Calculate level difference and adjust unallocated points
+      const levelDiff = currentLevel - playerState.level;
+      const additionalPoints = levelDiff * 5;
+
+      return {
+        attack: playerState.attack,
+        defense: playerState.defense,
+        stamina: playerState.stamina,
+        points: playerState.points + additionalPoints,
+        level: currentLevel,
+        askToFetch: additionalPoints > 0 ? true : false
+      };
+    } catch {
+      return null;
+    }
+  }
+
   // Function to fetch current stats and update sidebar
   async function fetchAndUpdateSidebarStats() {
     try {
-      // Try to get stats from topbar first, then page elements, then make AJAX call
+      // Try to get stats from savedState first, then page elements, then make AJAX call
       let attack = '-', defense = '-', stamina = '-', points = '-';
 
-      // Method 1: Try stats page elements (v-attack, etc.)
+      // Method 1: Try stats from savedState (attack, etc.)
+      const savedState = getPlayerState();
+      if (savedState && !savedState.askToFetch) {
+        updateSidebarStats({
+          ATTACK: savedState.attack,
+          DEFENSE: savedState.defense,
+          STAMINA: savedState.stamina,
+          STAT_POINTS: savedState.points
+        });
+        return;
+      }
+
+      // Method 2: Try stats page elements (v-attack, etc.)
       attack = document.getElementById('v-attack')?.textContent || 
               document.querySelector('[data-stat="attack"]')?.textContent;
       defense = document.getElementById('v-defense')?.textContent || 
@@ -212,7 +271,7 @@
       points = document.getElementById('v-points')?.textContent || 
               document.querySelector('[data-stat="points"]')?.textContent;
 
-      // Method 2: Try topbar stamina (but we'll need AJAX for attack/defense/points)
+      // Method 3: Try topbar stamina (but we'll need AJAX for attack/defense/points)
       if (!stamina || stamina === '-') {
         const staminaSpan = document.getElementById('stamina_span');
         if (staminaSpan) {
@@ -227,35 +286,48 @@
       // Method 3: If we don't have attack/defense/points, try AJAX call with different approaches
       if ((!attack || attack === '-') || (!defense || defense === '-') || (!points || points === '-')) {
         try {
+          let result, type
           // Try the allocate action first (it returns current stats)
-          let response = await fetch('stats_ajax.php', {
+          await fetch('stats_ajax.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: 'action=get_stats'
+          }).then(async response => {
+            result = response.ok ? await response.text() : null
+            type = 'json'
           });
           
-          if (!response.ok) {
-            // Try alternative approach - allocate 0 points to get current stats
-            response = await fetch('stats_ajax.php', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-              body: 'action=allocate&stat=attack&amount=0'
+          if (!result) {
+            // Try alternative approach - stupid strick
+            await fetch('stats.php', {
+              method: 'GET',
+            }).then(async response => {
+              const htmlPage = document.createElement('html')
+              htmlPage.innerHTML = await response.text();
+              result = htmlPage.querySelector('.container');
+              type = 'html'
             });
           }
           
-          if (response.ok) {
-            const text = await response.text();
-            console.log('Stats response:', text); // Debug log
-            
+          if (result) {
             try {
-              const data = JSON.parse(text);
-              if (data && data.user) {
-                attack = data.user.ATTACK || data.user.attack || attack || '-';
-                defense = data.user.DEFENSE || data.user.defense || defense || '-';
-                stamina = data.user.STAMINA || data.user.MAX_STAMINA || data.user.stamina || stamina || '-';
-                points = data.user.STAT_POINTS || data.user.stat_points || points || '-';
+              if(type === 'json') {
+                const data = JSON.parse(result);
+                if (data && data.user) {
+                  attack = data.user.ATTACK || data.user.attack || attack || '-';
+                  defense = data.user.DEFENSE || data.user.defense || defense || '-';
+                  stamina = data.user.STAMINA || data.user.MAX_STAMINA || data.user.stamina || stamina || '-';
+                  points = data.user.STAT_POINTS || data.user.stat_points || points || '-';
+                  console.log('Parsed stats:', { attack, defense, stamina, points });
+                }
+              } else if (type === 'html') {
+                attack = result.querySelector('#v-attack')?.textContent || attack || '-';
+                defense = result.querySelector('#v-defense')?.textContent || defense || '-';
+                stamina = result.querySelector('#v-stamina')?.textContent || stamina || '-';
+                points = result.querySelector('#v-points')?.textContent || points || '-';
                 console.log('Parsed stats:', { attack, defense, stamina, points });
               }
+              savePlayerState({attack,defense,stamina,points})
             } catch (parseError) {
               console.log('JSON parse error:', parseError, 'Response was:', text);
             }
@@ -322,8 +394,8 @@
               <div class="upgrade-section">
                 <div class="stat-upgrade-row" data-stat="attack">
                   <div class="stat-info">
-                    <span>⚔️ Attack:</span>
-                    <span id="sidebar-attack-alloc">-</span>
+                    <span>⚔️ Atk</span>
+                    <span id="sidebar-attack-alloc" style="margin-right:6px;">-</span>
                   </div>
                   <div class="upgrade-controls">
                     <button class="upgrade-btn" draggable="false">+1</button>
@@ -332,8 +404,8 @@
                 </div>
                 <div class="stat-upgrade-row" data-stat="defense">
                   <div class="stat-info">
-                    <span>🛡️ Defense:</span>
-                    <span id="sidebar-defense-alloc">-</span>
+                    <span>🛡️ Def</span>
+                    <span id="sidebar-defense-alloc" style="margin-right:6px;">-</span>
                   </div>
                   <div class="upgrade-controls">
                     <button class="upgrade-btn" draggable="false">+1</button>
@@ -342,8 +414,8 @@
                 </div>
                 <div class="stat-upgrade-row" data-stat="stamina">
                   <div class="stat-info">
-                    <span>⚡ Stamina:</span>
-                    <span id="sidebar-stamina-alloc">-</span>
+                    <span>⚡ Sta</span>
+                    <span id="sidebar-stamina-alloc" style="margin-right:6px;">-</span>
                   </div>
                   <div class="upgrade-controls">
                     <button class="upgrade-btn" draggable="false">+1</button>
@@ -510,67 +582,6 @@
         transition: all .5s ease;
         left: 0;
         z-index: 100;
-      }
-
-      @media (min-width:601px) {
-        #game-sidebar {
-          height: calc(100% - 74px);
-          top: 56px;;
-        }
-
-        #extension-enemy-loot-container {
-          display: inline-flex;
-        }
-
-        #extension-loot-container {
-          display: ruby;
-          max-width: 50%;
-        }
-
-        #extension-loot-container .loot-card {
-          width: 50%;
-        }
-      }
-
-      @media (max-width:600px) {
-        body {
-          padding-right: 0;
-          padding-top: 70px;
-        }
-
-        .content-area.full {
-          width: -webkit-fill-available;
-          top: 74px;
-        }
-
-        .sidebar-toggle {
-          background: linear-gradient(90deg, #b73bf6, #7022ee);
-        }
-
-        .content-area.full .panel {
-          width: -webkit-fill-available;
-        }
-
-        .ranking-wrapper {
-          flex-wrap: wrap
-        }
-
-        #extension-enemy-loot-container {
-          display: flex;
-          flex-flow: column;
-          flex-wrap: wrap;
-          gap: 16px;
-        }
-
-        #extension-loot-container {
-          display: flex;
-          flex-flow: wrap;
-          justify-content: space-between;
-        }
-
-        #extension-loot-container .loot-card {
-          width: 42%;
-        }
       }
 
       .content-area.full .panel .event-table td:has(a.btn) {
@@ -1093,6 +1104,67 @@
       .pvp-chip.success {
         background: #3ddd65;
         border: 1px solid #45e26d;
+      }
+
+      @media (min-width:601px) {
+        #game-sidebar {
+          height: calc(100% - 74px);
+          top: 56px;;
+        }
+
+        #extension-enemy-loot-container {
+          display: inline-flex;
+        }
+
+        #extension-loot-container {
+          display: ruby;
+          max-width: 50%;
+        }
+
+        #extension-loot-container .loot-card {
+          width: 50%;
+        }
+      }
+
+      @media (max-width:600px) {
+        body {
+          padding-right: 0;
+          padding-top: 70px;
+        }
+
+        .content-area.full {
+          width: -webkit-fill-available;
+          top: 74px;
+        }
+
+        .sidebar-toggle {
+          background: linear-gradient(90deg, #b73bf6, #7022ee);
+        }
+
+        .content-area.full .panel {
+          width: -webkit-fill-available;
+        }
+
+        .ranking-wrapper {
+          flex-wrap: wrap
+        }
+
+        #extension-enemy-loot-container {
+          display: flex;
+          flex-flow: column;
+          flex-wrap: wrap;
+          gap: 16px;
+        }
+
+        #extension-loot-container {
+          display: flex;
+          flex-flow: wrap;
+          justify-content: space-between;
+        }
+
+        #extension-loot-container .loot-card {
+          width: 42%;
+        }
       }
     `;
     document.head.appendChild(style);
