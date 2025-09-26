@@ -112,6 +112,7 @@
     energyCap: 30,
     energyTarget: 150,
     autoSurrenderEnabled: false,
+    gameBackgroundEnabled: true,
   };
 
   // Page-specific functionality mapping
@@ -469,7 +470,7 @@
         <li><a href="index.php"><img src="images/menu/compressed_manga.webp" alt="Manga"> Manga-Manhwa-Manhua</a></li>
         <li>
           <div class="sidebar-menu-expandable">
-            <a href="#"><img src="https://i.ibb.co.com/TD4SQmRb/1758653168.jpg" alt="Inventory"> Automation Script</a>
+            <a href="#"><img src="https://i.ibb.co.com/v6K0WkvP/1758653168-small.jpg" alt="Automation Script"> Automation Script</a>
             <button class="expand-btn" id="automation-expand-btn">${extensionSettings.automationExpanded ? '–' : '+'}</button>
           </div>
           <div id="automation-expanded" class="sidebar-submenu ${extensionSettings.automationExpanded ? '' : 'collapsed'}">
@@ -484,6 +485,7 @@
           </div>
         </li>
         <li><a href="#" id="settings-link"><img src="images/menu/compressed_stats_menu.webp" alt="Settings"> ⚙️ Settings</a></li>
+        <li><a href="#" id="about-link"><img src="images/menu/compressed_guide.webp" alt="About"> ℹ️ About</a></li>
       </ul>
     `;
 
@@ -560,13 +562,22 @@
 
     document.body.style.paddingTop = !isMobileView ? "55px" : "80px";
     document.body.style.paddingLeft = "0px";
+    document.body.style.paddingRight = "0px";
     document.body.style.margin = "0px";
 
     const style = document.createElement('style');
     style.textContent = `
+      #veyra-background {
+        display: none;
+      }
+
+      .veyra-background #veyra-background {
+        display: block;
+      }
+
       .main-wrapper {
         display: flex;
-        min-height: calc(100vh - 74px);
+        min-height: calc(100vh - 54px);
       }
 
       #game-sidebar {
@@ -577,11 +588,15 @@
         padding: 15px 0;
         overflow-y: auto;
         position: fixed;
-        height: calc(100% - 100px);
+        height: calc(100% - 76px);
         top: 76px;
         transition: all .5s ease;
         left: 0;
         z-index: 100;
+      }
+
+      #game-sidebar.veyra-background {
+        background: linear-gradient(145deg, rgb(39 39 39 / 90%), rgb(0 0 0 / 90%)) !important;
       }
 
       .content-area.full .panel .event-table td:has(a.btn) {
@@ -636,10 +651,17 @@
         transform: rotate(90deg);
         padding: 10px 20px;
         border-radius: 14px 14px 0 0;
+        transition: all 0.5 ease;
+        z-index: 1;
+      }
+
+      .veyra-background .sidebar-toggle {
+        background: linear-gradient(145deg, #312b2b, #100d0d) !important;
       }
 
       .sidebar-toggle.hide {
         z-index: -1;
+        left: -110px;
       }
 
       .sidebar-toggle-x {
@@ -819,10 +841,15 @@
         background: rgba(0, 0, 0, 0.3);
         padding: 15px 20px;
         margin: 0;
+        height: max-content;
+        overflow: hidden;
+        transition: all .5s ease;
       }
 
       .sidebar-submenu.collapsed {
-        display: none;
+        padding-top: 0;
+        padding-bottom: 0;
+        height: 0;
       }
 
       .coming-soon-text {
@@ -1171,6 +1198,7 @@
 
     initSidebarExpandables();
     initSettingsModal();
+    initGameBackground();
     fetchAndUpdateSidebarStats();
     initPvPAutomationButton();
     initFarmingAutomationButton();
@@ -1412,6 +1440,11 @@
       e.preventDefault();
       showSettingsModal();
     });
+    
+    document.getElementById('about-link').addEventListener('click', (e) => {
+      e.preventDefault();
+      showAboutModal();
+    });
   }
 
   function showSettingsModal() {
@@ -1424,6 +1457,17 @@
       modal.innerHTML = `
         <div class="settings-content">
           <h2 style="color: #cba6f7; margin-bottom: 25px; text-align: center;">Settings</h2>
+
+          <div class="settings-section">
+            <h3 style="color: #f9e2af; margin-bottom: 15px;">🎨 Game Background</h3>
+            <div style="margin: 15px 0;">
+              <label style="display: flex; align-items: center; gap: 10px; color: #cdd6f4; margin-bottom: 10px;">
+                <input type="checkbox" id="game-setting-bg-image" style="transform: scale(1.2);">
+                <span>Enable Game Background Image</span>
+              </label>
+              *when you enable this Game Background, all the color change wont show any effect
+            </div>
+          </div>
 
           <div class="settings-section">
             <h3>Sidebar Color</h3>
@@ -1592,6 +1636,23 @@
     });
   }
 
+  function initGameBackground() {
+    if (!extensionSettings.gameBackgroundEnabled) return;
+    
+    const body = document.querySelector('body')
+    const mainWrapper = document.querySelector('.main-wrapper')
+    const sidebar = document.querySelector('#game-sidebar')
+
+    const newBg = document.createElement('div')
+    newBg.id = 'veyra-background'
+    newBg.style = `width: 102vw;height: 102vh;position: fixed;top: 0px;left: -16px;background: url('https://demonicscans.org/images/veyra.webp');background-size: cover;background-repeat: no-repeat;z-index: -20;filter: blur(10px);`
+    body.appendChild(newBg)
+
+    body.classList.add('veyra-background')
+    mainWrapper.classList.add('veyra-background')
+    sidebar.classList.add('veyra-background')
+  }
+
   function setupMultiplePotionSettings() {
     const enabledCheckbox = document.getElementById('multiple-pots-enabled');
     const countInput = document.getElementById('multiple-pots-count');
@@ -1620,7 +1681,6 @@
       });
     }
   }
-
   function setupPinnedItemsLimitSettings() {
     const limitInput = document.getElementById('pinned-items-limit');
     
@@ -1641,7 +1701,6 @@
     const modeSelect = document.getElementById('autofarm-value-mode');
     const energyCapInput = document.getElementById('autofarm-value-energy-cap');
     const energyTargetInput = document.getElementById('autofarm-value-energy-target');
-    const autoSurrenderCheckbox = document.getElementById('autosurrender-function-enable');
     
     if (modeSelect) {
       modeSelect.value = extensionSettings.farmingMode;
@@ -1665,14 +1724,6 @@
       energyTargetInput.addEventListener('change', (e) => {
         const value = Math.max(0, parseInt(e.target.value) || 150);
         extensionSettings.energyTarget = value;
-        saveSettings();
-      });
-    }
-    
-    if (autoSurrenderCheckbox) {
-      autoSurrenderCheckbox.checked = extensionSettings.autoSurrenderEnabled;
-      autoSurrenderCheckbox.addEventListener('change', (e) => {
-        extensionSettings.autoSurrenderEnabled = e.target.checked;
         saveSettings();
       });
     }
@@ -1774,6 +1825,42 @@
     const modal = document.getElementById('settings-modal');
     if (!modal) return;
 
+    const gameBackgroundCheckbox = document.getElementById('game-setting-bg-image');
+    if (gameBackgroundCheckbox) {
+      gameBackgroundCheckbox.checked = extensionSettings.gameBackgroundEnabled;
+      gameBackgroundCheckbox.addEventListener('change', (e) => {
+        extensionSettings.gameBackgroundEnabled = e.target.checked;
+        saveSettings();
+        
+        // Remove existing background
+        const existingBg = document.getElementById('veyra-background');
+        if (existingBg) existingBg.remove();
+        
+        // Apply or remove background classes
+        const body = document.querySelector('body');
+        const mainWrapper = document.querySelector('.main-wrapper');
+        const sidebar = document.querySelector('#game-sidebar');
+        
+        if (e.target.checked) {
+          initGameBackground();
+        } else {
+          body?.classList.remove('veyra-background');
+          mainWrapper?.classList.remove('veyra-background');
+          sidebar?.classList.remove('veyra-background');
+        }
+      });
+    }
+
+    const autoSurrenderCheckbox = document.getElementById('autosurrender-function-enable');
+    if (autoSurrenderCheckbox) {
+      autoSurrenderCheckbox.checked = extensionSettings.autoSurrenderEnabled;
+      autoSurrenderCheckbox.addEventListener('change', (e) => {
+        extensionSettings.autoSurrenderEnabled = e.target.checked;
+        saveSettings();
+      });
+    }
+
+
     // Close button
     modal.querySelector('.settings-button[data-action="close"]')?.addEventListener('click', (e) => {
       e.preventDefault();
@@ -1824,6 +1911,56 @@
     }
   }
 
+  function showAboutModal() {
+    let modal = document.getElementById('about-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'about-modal';
+      modal.className = 'settings-modal';
+      modal.innerHTML = `
+        <div class="settings-content">
+          <h3 style="color: #cba6f7; margin-bottom: 25px; text-align: center;">About Veyra Extension UI Overhaul</h3>
+          
+          <div class="settings-section">
+            <h4>🚀 Features</h4>
+            <p>Comprehensive game enhancement suite with advanced sidebar interface, automation systems, and enhanced gameplay features.</p>
+            <p>Version 0.36</p>
+          </div>
+
+          <div class="settings-section">
+            <h4>🙏 Credits</h4>
+            <div style="margin: 15px 0; line-height: 1.6;">
+              <h4 style="color: #f9e2af; margin-top: 20px;">Development Team</h4>
+              <p><strong>Mrdhnto:</strong> UI polishing, responsive design, encryption implementation, script integration</p>
+              <p><strong>Smol:</strong> Automation scripting and logic development</p>
+
+              <h4 style="color: #f9e2af;">Original Sources</h4>
+              <p><strong>UI Foundation:</strong> asura-cr/ui-addon - Original Chrome extension UI</p>
+              <p><strong>Sidebar UI Origin:</strong> Keazte's for creating first sidebar extension</p>
+            </div>
+          </div>
+
+          <div class="settings-section" style="background: rgba(203, 166, 247, 0.1); padding: 4px 16px; border-radius: 8px; margin-top: 20px;">
+            <p style="margin-bottom: 10px;">For better update or feature request, please go directly to asura-cr repo, I just do this in my spare time and because someone I know asking for this integration.</p>
+            <p>Also I wont create Pull Request because this version (maybe) contain automations that breaking Game Rules.</p>
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px;">
+            <button class="settings-button" onclick="document.getElementById('about-modal').style.display='none'">Close</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+    
+    modal.style.display = 'flex';
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+  }
+
   function resetSettings() {
     extensionSettings = {
       sidebarColor: '#1e1e2e',
@@ -1844,6 +1981,8 @@
       farmingMode: 'energy-cap',
       energyCap: 30,
       energyTarget: 150,
+      autoSurrenderEnabled: false,
+      gameBackgroundEnabled: true
     };
     saveSettings();
     applySettings();
@@ -1881,7 +2020,7 @@
         energyCap: 30,
         energyTarget: 150,
         autoSurrenderEnabled: false,
-        autoSurrenderEnabled: false,
+        gameBackgroundEnabled: true,
       };
       
       // Apply default settings
@@ -3630,39 +3769,94 @@
   function createPvPAutomationButton() {
     const heroRow = document.querySelector('.hero-row');
     const btnStartTop = document.getElementById('btnStartTop');
-    
-    if (heroRow && btnStartTop && !document.getElementById('btnAutomationPvp')) {
-      const automationBtn = document.createElement('button');
-      automationBtn.id = 'btnAutomationPvp';
-      automationBtn.className = 'hero-btn';
-      automationBtn.title = 'PvP Automation';
-      automationBtn.draggable = false;
-      automationBtn.textContent = 'Automate PvP';
+
+    if (heroRow && btnStartTop && !document.getElementById('btnAutomationXPvp')) {
+      const automationXBtnInput = document.createElement('input');
+      automationXBtnInput.id = 'automationXBtnInput';
+      automationXBtnInput.type = 'number';
+      automationXBtnInput.style = 'width: 60px;padding: 5px;background: #63636300;color: #cdd6f4;border: 1px solid #45475a;border-radius: 4px;margin-right: 10px;';
+      automationXBtnInput.draggable = false;
+      automationXBtnInput.max = 20;
+      automationXBtnInput.min = 0;
+      automationXBtnInput.value = 1;
+
+      const automationXBtn = document.createElement('button');
+      automationXBtn.id = 'btnAutomationXPvp';
+      automationXBtn.title = 'PvP Automation x times';
+      automationXBtn.draggable = false;
+      automationXBtn.textContent = 'Automate PvP';
+      automationXBtn.style = 'background: #ffffff;color: #000000;border: 1.25px solid rgba(255, 255, 255, .85);border-radius: 10px;padding: 7px 10px;font-weight: 900;cursor: pointer;';
+
+      const automationXBtnWrapper = document.createElement('div');
+      automationXBtnWrapper.style = 'background: transparent;color: #fff;border: 1.25px solid rgba(255, 255, 255, .85);border-radius: 10px;padding: 7px 10px;font-weight: 900;cursor: pointer;backdrop-filter: blur(2px);';
+      automationXBtnWrapper.draggable = false;
       
-      automationBtn.addEventListener('click', togglePvPAutomation);
-      
-      btnStartTop.insertAdjacentElement('afterend', automationBtn);
+      automationXBtnWrapper.append(automationXBtnInput);
+      automationXBtnWrapper.append(automationXBtn);
+
+      automationXBtn.addEventListener('click', togglePvPAutomationX);
+
+      btnStartTop.insertAdjacentElement('afterend', automationXBtnWrapper);
+
+      const automationAllBtn = document.createElement('button');
+      automationAllBtn.id = 'btnAutomationAllPvp';
+      automationAllBtn.className = 'hero-btn';
+      automationAllBtn.title = 'PvP Automation All Coin';
+      automationAllBtn.draggable = false;
+      automationAllBtn.textContent = 'Automate PvP (All Coins)';
+
+      automationAllBtn.addEventListener('click', togglePvPAutomationAll);
+
+      automationXBtnWrapper.insertAdjacentElement('afterend', automationAllBtn);
       updatePvPHeroButtonState();
     }
   }
 
   function updatePvPHeroButtonState() {
-    const btn = document.getElementById('btnAutomationPvp');
-    if (!btn) return;
-    
-    const isRunning = getPvPAutomation();
+    const xBtn = document.getElementById('btnAutomationXPvp');
+    const allBtn = document.getElementById('btnAutomationAllPvp');
     const coinsEl = document.querySelector('#pvp-coins');
     const coins = coinsEl ? parseInt(coinsEl.textContent) : 1;
-    
-    if (coins === 0 && !isRunning) {
-      btn.disabled = true;
-      btn.style.cursor = 'not-allowed';
-      btn.textContent = 'No PvP Coins';
-    } else {
-      btn.disabled = false;
-      btn.style.cursor = 'pointer';
-      btn.textContent = isRunning ? 'Stop PvP' : 'Automate PvP';
-      btn.style.background = isRunning ? '#f38ba8' : '';
+    const isRunning = getPvPAutomation();
+    const automationMode = localStorage.getItem('pvp-automation-mode') || 'all';
+    const remaining = parseInt(localStorage.getItem('pvp-automation-x-remaining') || '0');
+
+    if (xBtn) {
+      if (coins === 0 && !isRunning) {
+        xBtn.disabled = true;
+        xBtn.style.cursor = 'not-allowed';
+        xBtn.textContent = 'No PvP Coins';
+        xBtn.style.background = '#6c7086';
+      } else {
+        xBtn.disabled = false;
+        xBtn.style.cursor = 'pointer';
+        if (isRunning && automationMode === 'x') {
+          xBtn.textContent = `Stop PvP (${remaining})`;
+          xBtn.style.background = '#f38ba8';
+        } else {
+          xBtn.textContent = 'Automate PvP';
+          xBtn.style.background = '#ffffff';
+        }
+      }
+    }
+
+    if (allBtn) {
+      if (coins === 0 && !isRunning) {
+        allBtn.disabled = true;
+        allBtn.style.cursor = 'not-allowed';
+        allBtn.textContent = 'No PvP Coins';
+        allBtn.style.background = '#6c7086';
+      } else {
+        allBtn.disabled = false;
+        allBtn.style.cursor = 'pointer';
+        if (isRunning && automationMode === 'all') {
+          allBtn.textContent = 'Stop PvP';
+          allBtn.style.background = '#f38ba8';
+        } else {
+          allBtn.textContent = 'Automate PvP (All Coins)';
+          allBtn.style.background = '';
+        }
+      }
     }
   }
 
@@ -3726,6 +3920,15 @@
   if (localStorage.getItem('pvp-auto-surrend') === null) {
     localStorage.setItem('pvp-auto-surrend', 'false');
   }
+  if (localStorage.getItem('pvp-automation-mode') === null) {
+    localStorage.setItem('pvp-automation-mode', 'all'); // 'all' or 'x'
+  }
+  if (localStorage.getItem('pvp-automation-x-count') === null) {
+    localStorage.setItem('pvp-automation-x-count', '0');
+  }
+  if (localStorage.getItem('pvp-automation-x-remaining') === null) {
+    localStorage.setItem('pvp-automation-x-remaining', '0');
+  }
 
   var pvpHUD = null;
   var originalAlert = window.alert;
@@ -3768,8 +3971,9 @@
   function initPvPAutomationButton() {
     const automationBtn = document.getElementById('btn-automation-pvp');
     if (automationBtn) {
-      updatePvPButtonState();
-      automationBtn.addEventListener('click', togglePvPAutomation);
+      automationBtn.addEventListener('click', () => {
+        window.location.href = '/pvp.php'
+      })
     }
   }
 
@@ -3828,34 +4032,78 @@
     updatePvPHeroButtonState();
   }
 
-  function togglePvPAutomation() {
-    const newRunningState = !getPvPAutomation();
-    setPvPAutomation(newRunningState);
-    updatePvPButtonState();
+  function togglePvPAutomationX() {
+    const input = document.getElementById('automationXBtnInput');
+    const coinsEl = document.querySelector('#pvp-coins');
+    const coins = coinsEl ? parseInt(coinsEl.textContent) : 0;
+    const isRunning = getPvPAutomation();
     
-    if (newRunningState) {
-      // If not on PvP page, redirect to pvp.php and start automation
-      if (!window.location.pathname.includes('pvp.php') && !window.location.pathname.includes('pvp_battle.php')) {
-        showNotification('Redirecting to PvP page...', 'info');
-        window.location.href = 'pvp.php';
-        return;
-      }
-      
-      // Override dialogs when starting automation
-      if (window.location.pathname.includes('pvp_battle.php')) {
-        window.alert = () => true;
-        window.confirm = () => true;
-        window.prompt = () => true;
-      }
-      startPvPAutomation();
+    if (isRunning) {
+      setPvPAutomation(false);
+      localStorage.setItem('pvp-automation-mode', 'x');
+      localStorage.setItem('pvp-automation-x-remaining', '0');
+      updatePvPHeroButtonState();
+      showNotification('PvP automation stopped', 'info');
+      return;
+    }
+
+    const xValue = parseInt(input.value) || 0;
+    
+    if (xValue < 1) {
+      showNotification('Value must be at least 1', 'error');
+      return;
+    }
+    
+    if (xValue > coins) {
+      showNotification(`Not enough coins! You have ${coins} coins but need ${xValue}`, 'error');
+      return;
+    }
+
+    localStorage.setItem('pvp-automation-mode', 'x');
+    localStorage.setItem('pvp-automation-x-count', xValue.toString());
+    localStorage.setItem('pvp-automation-x-remaining', xValue.toString());
+    setPvPAutomation(true);
+    updatePvPHeroButtonState();
+    
+    if (!window.location.pathname.includes('pvp.php') && !window.location.pathname.includes('pvp_battle.php')) {
+      showNotification(`Starting PvP automation for ${xValue} battles...`, 'success');
+      window.location.href = 'pvp.php';
     } else {
-      // Restore dialogs when stopping
-      if (window.location.pathname.includes('pvp_battle.php')) {
-        window.alert = originalAlert;
-        window.confirm = originalConfirm;
-        window.prompt = originalPrompt;
-      }
-      stopPvPAutomation();
+      showNotification(`Starting PvP automation for ${xValue} battles...`, 'success');
+      startPvPAutomation();
+    }
+  }
+
+  function togglePvPAutomationAll() {
+    const coinsEl = document.querySelector('#pvp-coins');
+    const coins = coinsEl ? parseInt(coinsEl.textContent) : 0;
+    const isRunning = getPvPAutomation();
+    
+    if (isRunning) {
+      setPvPAutomation(false);
+      localStorage.setItem('pvp-automation-mode', 'all');
+      localStorage.setItem('pvp-automation-x-remaining', '0');
+      updatePvPHeroButtonState();
+      showNotification('PvP automation stopped', 'info');
+      return;
+    }
+
+    if (coins === 0) {
+      showNotification('No PvP coins available', 'error');
+      return;
+    }
+
+    localStorage.setItem('pvp-automation-mode', 'all');
+    localStorage.setItem('pvp-automation-x-remaining', '0');
+    setPvPAutomation(true);
+    updatePvPHeroButtonState();
+    
+    if (!window.location.pathname.includes('pvp.php') && !window.location.pathname.includes('pvp_battle.php')) {
+      showNotification('Starting PvP automation for all coins...', 'success');
+      window.location.href = 'pvp.php';
+    } else {
+      showNotification('Starting PvP automation for all coins...', 'success');
+      startPvPAutomation();
     }
   }
 
@@ -4065,18 +4313,6 @@
     }
   }
 
-  function stopPvPAutomation() {
-    // Stop any running autoslash
-    stopAutoSlash();
-    
-    // Restore original alert functions when stopping
-    if (window.location.pathname.includes('pvp_battle.php')) {
-      window.alert = originalAlert;
-      window.confirm = originalConfirm;
-      window.prompt = originalPrompt;
-    }
-  }
-
   function checkCoinsAndBattle() {
     if (!getPvPAutomation()) return;
     
@@ -4087,19 +4323,51 @@
     }
     
     const coins = parseInt(coinsEl.textContent);
-    
-    if (coins > 0) {
-      performSingleBattle().then(() => {
-        window.location.href = 'https://demonicscans.org/pvp.php';
-      });
-    } else {
+    const automationMode = localStorage.getItem('pvp-automation-mode') || 'all';
+    const remaining = parseInt(localStorage.getItem('pvp-automation-x-remaining') || '0');
+
+    // Check stopping conditions BEFORE starting battle
+    if (automationMode === 'x' && remaining <= 0) {
+      showNotification('PvP automation completed', 'success');
+      setPvPAutomation(false);
+      localStorage.setItem('pvp-automation-mode', 'all');
+      localStorage.setItem('pvp-automation-x-remaining', '0');
+      updatePvPHeroButtonState();
+      return;
+    }
+
+    if (coins <= 0) {
       showNotification('No more PVP coins available', 'warning');
       setPvPAutomation(false);
-      updatePvPButtonState();
+      localStorage.setItem('pvp-automation-mode', 'all');
+      localStorage.setItem('pvp-automation-x-remaining', '0');
+      updatePvPHeroButtonState();
+      return;
     }
+
+    // Start battle and handle completion
+    performSingleBattle().then(async () => {
+      // Continue to next battle
+      setTimeout(() => {
+        window.location.href = 'https://demonicscans.org/pvp.php';
+      }, 1000);
+    });
   }
 
   function performSingleBattle() {
+    const automationMode = localStorage.getItem('pvp-automation-mode') || 'all';
+    const remaining = parseInt(localStorage.getItem('pvp-automation-x-remaining') || '0');
+
+    window.alert = () => true;
+    window.confirm = () => true;
+    window.prompt = () => true;
+
+    if (automationMode === 'x') {
+      const newRemaining = remaining - 1;
+      console.log('Battle completed, updating remaining from', remaining, 'to', newRemaining);
+      localStorage.setItem('pvp-automation-x-remaining', newRemaining.toString());
+    }
+
     return new Promise((resolve) => {
       const startBtn = document.querySelector('#btnStartTop');
       if (!startBtn) {
@@ -4109,7 +4377,7 @@
       
       startBtn.click();
       
-      const attackLoop = () => {
+      const attackLoop = async () => {
         if (!getPvPAutomation()) {
           resolve();
           return;
@@ -4134,7 +4402,7 @@
             const atkNeeded = enemyMaxHealth / stats.yourDamage;
             const enemyAtkNeeded = yourMaxHealth / stats.enemyDamage;
             
-            if (enemyAtkNeeded <= atkNeeded) {
+            if (enemyAtkNeeded < atkNeeded) {
               const surrenderBtn = document.getElementById('btnSurrender');
               if (surrenderBtn) {
                 surrenderBtn.click();
@@ -4210,23 +4478,16 @@
 
   function initPvPAutomation() {
     const currentPath = window.location.pathname;
-    
+    const isRunning = getPvPAutomation()
     if (currentPath.includes('pvp_battle.php')) {
-      // Force override browser dialogs immediately if automation is running
-      if (getPvPAutomation()) {
-        window.alert = () => true;
-        window.confirm = () => true;
-        window.prompt = () => true;
-      }
-      
       createPvPBattleHUD();
       createPvPStopButton();
       createAutoSurrenderCheckbox();
       
-      if (getPvPAutomation()) {
+      if (isRunning) {
         startBattleLoop();
       }
-    } else if (currentPath.includes('pvp.php') && getPvPAutomation()) {
+    } else if (currentPath.includes('pvp.php') && isRunning) {
       setTimeout(checkCoinsAndBattle, 1000);
     }
   }
@@ -4324,7 +4585,9 @@
 
   function checkUserLogin() {
     const userInfo = document.querySelector('.comments-section .user-info');
-    if (!userInfo) {
+    const loginContainer = document.querySelector('#login-container');
+
+    if (!userInfo || loginContainer) {
       console.log('User not logged in, clearing cookies and redirecting to login');
       // Clear all cookies for this domain
       document.cookie.split(";").forEach(function(c) { 
@@ -4960,6 +5223,23 @@
       const br = document.querySelector('br');
       if (br) br.remove();
     }
+
+    const scopedStyle = document.createElement('style')
+    scopedStyle.innerHTML = `
+      .hero-btn {
+        padding: 15px 10px;
+      }
+
+      .wrap:has(a.hero-btn) {
+        margin-top: 16px;
+      }
+
+      .wrap a.hero-btn {
+        padding: 7px 10px;
+      }
+    `;
+
+    contentArea.prepend(scopedStyle)
   }
 
   function initPlayerAtkDamage(){
